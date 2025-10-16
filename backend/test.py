@@ -1,15 +1,27 @@
 #Testing function to see what Alpaca API returns for historical options data
+import os
+from dotenv import load_dotenv
 from alpaca.data import OptionHistoricalDataClient
 from alpaca.data.requests import (
     OptionLatestQuoteRequest,
     OptionChainRequest,
 )
 
+# Load environment variables from .env file
+load_dotenv()
+
 def main():
     print("Starting Alpaca API test...")
 
     try:
-        option_client = OptionHistoricalDataClient("PKVN3Z3LO82GRQXB3GZ5",  "bnT1oOgufNXimZegURwQ7lhyprbOx7xnKiNyrCVl")
+        # Load API keys from environment variables
+        api_key = os.getenv("ALPACA_API_KEY")
+        secret_key = os.getenv("ALPACA_SECRET_KEY")
+        
+        if not api_key or not secret_key:
+            raise ValueError("API keys not found. Please set ALPACA_API_KEY and ALPACA_SECRET_KEY in .env file")
+        
+        option_client = OptionHistoricalDataClient(api_key, secret_key)
 
         req = OptionChainRequest(
             underlying_symbol ="SPY",
