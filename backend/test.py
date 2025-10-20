@@ -25,21 +25,18 @@ def main():
 
         req = OptionChainRequest(
             underlying_symbol ="SPY",
+            type="put",
+            strike_price_gte=590,
+            strike_price_lte=600,
+            expiration_date_gte="2026-03-15",
+            expiration_date_lte="2026-05-15",
         )
         # The option chain endpoint for underlying symbol provides the latest trade, 
         # latest quote, implied volatility, and greeks for each contract symbol of the underlying symbol.
         # Returns Union[Dict[str, OptionsSnapshot], RawData]
         option_chain = option_client.get_option_chain(req)
         print(option_chain)
-        # print(option_chain.keys())
-        # print(option_chain['SPY'])
-        # print(option_chain['SPY'].keys())
-        # print(option_chain['SPY'].values())
-        # print(option_chain['SPY'].values()[0])
-        # print(option_chain['SPY'].values()[0].keys())
-        # print(option_chain['SPY'].values()[0].values())
-        # print(option_chain['SPY'].values()[0].values()[0])
-        # print(option_chain['SPY'].values()[0].values()[0].keys())
+        print(len(option_chain))
         
     except Exception as e:
         print(f"Error: {e}")
