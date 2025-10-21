@@ -13,59 +13,36 @@ export function TryYourselfMode() {
   const [budget, setBudget] = useState("2");
   const [hedges, setHedges] = useState<HedgeOption[] | null>(null);
 
-  const calculateHedges = () => {
-    const portfolio = parseFloat(portfolioValue);
-    const days = parseInt(coverageLength);
-    const drop = parseFloat(dropPercentage);
-    const budgetPct = parseFloat(budget);
-
-    if (isNaN(portfolio) || isNaN(days) || isNaN(drop) || isNaN(budgetPct)) {
-      return;
+  const getHedgeRecommendations = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/api/v1/hedge_recommendations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          portfolio_value: parseFloat(portfolioValue),
+          coverage_days: parseInt(coverageLength),
+          drop_percentage: parseFloat(dropPercentage),
+          budget_percentage: parseFloat(budget)
+        })
+      });
+      const data = await response.json();
+      // Convert snake_case to camelCase for frontend compatibility
+      const convertedHedges = data.hedges.map((hedge: any) => ({
+        name: hedge.name,
+        description: hedge.description,
+        expiration: hedge.expiration,
+        strikePrice: hedge.strike_price,
+        contractPrice: hedge.contract_price,
+        contracts: hedge.contracts,
+        totalCost: hedge.total_cost,
+        costPercentage: hedge.cost_percentage,
+        protectionLevel: hedge.protection_level,
+        breakeven: hedge.breakeven,
+      }));
+      setHedges(convertedHedges);
+    } catch (error) {
+      console.error("Error fetching hedge recommendations:", error);
     }
-
-    const contracts = Math.round(portfolio / 100 / 100);
-    const maxBudget = (portfolio * budgetPct) / 100;
-
-    const calculatedHedges: HedgeOption[] = [
-      {
-        name: "Maximum Protection",
-        description: "Aggressive hedge protecting against any downturn",
-        expiration: `${days} days`,
-        strikePrice: 95,
-        contractPrice: 3.50,
-        contracts: contracts,
-        totalCost: contracts * 350,
-        costPercentage: (contracts * 350 / portfolio) * 100,
-        protectionLevel: "High",
-        breakeven: -((contracts * 350 / portfolio) * 100),
-      },
-      {
-        name: "Balanced Coverage",
-        description: "Moderate protection at reasonable cost",
-        expiration: `${days} days`,
-        strikePrice: 90,
-        contractPrice: 2.10,
-        contracts: contracts,
-        totalCost: contracts * 210,
-        costPercentage: (contracts * 210 / portfolio) * 100,
-        protectionLevel: "Medium",
-        breakeven: -((contracts * 210 / portfolio) * 100),
-      },
-      {
-        name: "Crash-Only Protection",
-        description: "Low-cost hedge for severe market drops",
-        expiration: `${days} days`,
-        strikePrice: 80,
-        contractPrice: 0.75,
-        contracts: contracts,
-        totalCost: contracts * 75,
-        costPercentage: (contracts * 75 / portfolio) * 100,
-        protectionLevel: "Low",
-        breakeven: -((contracts * 75 / portfolio) * 100),
-      },
-    ];
-
-    setHedges(calculatedHedges);
   };
 
   return (
@@ -138,7 +115,7 @@ export function TryYourselfMode() {
         </div>
 
         <button
-          onClick={calculateHedges}
+          onClick={getHedgeRecommendations}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6 px-6 rounded-lg text-lg transition-colors duration-200"
         >
           Calculate Hedge Options
